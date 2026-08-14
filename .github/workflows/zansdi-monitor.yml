@@ -1,0 +1,55 @@
+name: ZanSDI Rendering Monitor
+
+on:
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      ZANSDI_PASSWORD: ${{ secrets.ZANSDI_PASSWORD }}
+
+      ZANSDI_USERNAME_1: ${{ secrets.ZANSDI_USERNAME_1 }}
+      ZANSDI_USERNAME_2: ${{ secrets.ZANSDI_USERNAME_2 }}
+      ZANSDI_USERNAME_3: ${{ secrets.ZANSDI_USERNAME_3 }}
+      ZANSDI_USERNAME_4: ${{ secrets.ZANSDI_USERNAME_4 }}
+      ZANSDI_USERNAME_5: ${{ secrets.ZANSDI_USERNAME_5 }}
+      ZANSDI_USERNAME_6: ${{ secrets.ZANSDI_USERNAME_6 }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright Chromium
+        run: |
+          python -m playwright install --with-deps chromium
+
+      - name: Run three synthetic users
+        run: |
+          mkdir -p artifacts/logs
+          python run_concurrent.py --users 3 --stagger 8 2>&1 | tee artifacts/logs/monitor.log
+
+      - name: Upload failure screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zansdi-monitor-${{ github.run_number }}
+          path: |
+            artifacts/screenshots/
+            artifacts/logs/
+          if-no-files-found: ignore
+          retention-days: 7
