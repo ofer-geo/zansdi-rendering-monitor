@@ -2,6 +2,7 @@ name: ZanSDI Rendering Monitor
 
 on:
   workflow_dispatch:
+  schedule:
   schedule:  
     - cron: "10 * * * *"
 
