@@ -55,7 +55,7 @@ point_index = (
 INITIAL_ZOOM_POINT = INITIAL_ZOOM_POINTS[point_index]
 CENTER_ZOOM_POINT = CENTER_ZOOM_POINTS[point_index]
 
-OBSERVATION_SECONDS = 30
+OBSERVATION_SECONDS = 60
 SCREENSHOTS_DIRECTORY = Path("artifacts/screenshots")
 HEADLESS=True
 
@@ -351,8 +351,18 @@ def run_scenario(
             network_monitor.start_window(scale)
 
             for _ in range(wheel_steps):
+                # Ensure the page and map receive the wheel action.
+                page.bring_to_front()
+                page.mouse.move(
+                    *(INITIAL_ZOOM_POINT if index == 0 else CENTER_ZOOM_POINT)
+                )
+                page.wait_for_timeout(500)
+
                 page.mouse.wheel(0, -1000)
-                page.wait_for_timeout(1_000)
+
+                # Give the map enough time to finish the zoom animation
+                # and issue the new WMS requests.
+                page.wait_for_timeout(3_000)
 
             print(
                 f"Collecting requests for {scale} "
