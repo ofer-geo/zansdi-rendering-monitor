@@ -7,3 +7,4 @@ __pycache__/
 monitor.log
 *.zip
 *.xlsx
+!rendering_monitoring_tests.xlsx
