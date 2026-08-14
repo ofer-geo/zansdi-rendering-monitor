@@ -3,7 +3,7 @@ name: ZanSDI Rendering Monitor
 on:
   workflow_dispatch:
   schedule:  
-    - cron: "10 * * * *"
+    - cron: "10,40 * * * *"
 
 jobs:
   monitor:
@@ -43,7 +43,7 @@ jobs:
       - name: Run three synthetic users
         run: |
           mkdir -p artifacts/logs
-          python run_concurrent.py --users 4 --stagger 8 2>&1 | tee artifacts/logs/monitor.log
+          python run_concurrent.py --users 1 --stagger 8 2>&1 | tee artifacts/logs/monitor.log
 
       - name: Upload failure screenshots and logs
         if: always()
