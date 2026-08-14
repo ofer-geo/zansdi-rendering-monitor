@@ -2,12 +2,8 @@ name: ZanSDI Rendering Monitor
 
 on:
   workflow_dispatch:
-  schedule:
-<<<<<<< HEAD
-    - cron: "0 * * * *"
-=======
+  schedule:  
     - cron: "10 * * * *"
->>>>>>> d6d2b0e (Update workflow schedule and user count)
 
 jobs:
   monitor:
