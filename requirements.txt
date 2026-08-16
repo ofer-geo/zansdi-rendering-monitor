@@ -2,3 +2,4 @@ playwright
 python-dotenv
 psycopg[binary]
 openpyxl
+dbt-postgres
