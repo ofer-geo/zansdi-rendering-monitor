@@ -463,5 +463,33 @@ def main() -> None:
     print(f"Cycle ID: {cycle_id}")
     print("#" * 90)
 
+import subprocess
+
+
+def run_dbt() -> None:
+    project_root = Path(__file__).resolve().parent
+    dbt_directory = project_root / "monitoring_dbt"
+
+    print()
+    print("#" * 90)
+    print("Running dbt transformations and tests...")
+    print("#" * 90)
+
+    subprocess.run(
+        [
+            "dbt",
+            "build",
+            "--project-dir",
+            str(dbt_directory),
+            "--profile",
+            "monitoring_dbt",
+        ],
+        cwd=project_root,
+        check=True,
+    )
+
+    print("dbt completed successfully.", flush=True)
+
+
 if __name__ == "__main__":
     main()
