@@ -1,0 +1,36 @@
+version: 2
+
+sources:
+  - name: rendering_monitor
+    database: neondb
+    schema: public
+    tables:
+      - name: rendering_observations
+        description: Raw synthetic rendering-monitoring observations produced by the Python monitoring application.
+
+        columns:
+          - name: id
+            description: Unique identifier for the observation.
+            tests:
+              - not_null
+              - unique
+
+          - name: cycle_id
+            description: Identifier of the complete synthetic-monitoring execution cycle.
+            tests:
+              - not_null
+
+          - name: observed_at
+            description: UTC timestamp when the observation was recorded.
+            tests:
+              - not_null
+
+          - name: layer_identifier
+            description: GeoServer identifier of the monitored layer.
+            tests:
+              - not_null
+
+          - name: requests_sent
+            description: Number of HTTP requests made for the observation.
+            tests:
+              - not_null

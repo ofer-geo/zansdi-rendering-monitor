@@ -1,13 +1,10 @@
-# Python
-.venv/
-__pycache__/
-*.pyc
 
-# Secrets
+target/
+dbt_packages/
+logs/
 .env
-
 # Application logs
-/logs/
+logs/
 
 # dbt generated files
 monitoring_dbt/logs/
