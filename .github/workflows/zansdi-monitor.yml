@@ -48,23 +48,28 @@ jobs:
           python run_concurrent.py --users 1 --stagger 8 2>&1 | tee artifacts/logs/monitor.log
 
       - name: Create dbt profile
+        env:
+          NEON_HOST: ${{ secrets.NEON_HOST }}
+          NEON_USER: ${{ secrets.NEON_USER }}
+          NEON_PASSWORD: ${{ secrets.NEON_PASSWORD }}
+          NEON_DB: ${{ secrets.NEON_DB }}
         run: |
           mkdir -p ~/.dbt
-          cat > ~/.dbt/profiles.yml <<'EOF'
-          monitoring_dbt:
-            outputs:
-              dev:
-                type: postgres
-                host: "${{ secrets.NEON_HOST }}"
-                port: 5432
-                user: "${{ secrets.NEON_USER }}"
-                pass: "${{ secrets.NEON_PASSWORD }}"
-                dbname: "${{ secrets.NEON_DB }}"
-                schema: analytics
-                threads: 4
-                sslmode: require
-            target: dev
-          EOF 
+          printf '%s\n' \
+            'monitoring_dbt:' \
+            '  outputs:' \
+            '    dev:' \
+            '      type: postgres' \
+            "      host: \"$NEON_HOST\"" \
+            '      port: 5432' \
+            "      user: \"$NEON_USER\"" \
+            "      pass: \"$NEON_PASSWORD\"" \
+            "      dbname: \"$NEON_DB\"" \
+            '      schema: analytics' \
+            '      threads: 4' \
+            '      sslmode: require' \
+            '  target: dev' \
+            > ~/.dbt/profiles.yml 
 
       - name: Run dbt build
         working-directory: monitoring_dbt
