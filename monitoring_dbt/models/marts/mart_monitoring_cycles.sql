@@ -10,18 +10,23 @@ with cycle_summary as (
         sum(pending_requests) as total_pending_requests,
 
         case
-            when sum(requests_sent) > 0
-            then sum(successful_requests)::numeric / sum(requests_sent)
+            when sum(expected_requests) > 0
+            then
+                sum(
+                    least(
+                        successful_requests,
+                        expected_requests
+                    )
+                )::numeric
+                / sum(expected_requests)
             else null
         end as success_rate,
 
-        case
-            when sum(requests_sent) > 0
-             and sum(failed_requests) = 0
-             and sum(pending_requests) = 0
-            then true
-            else false
-        end as cycle_success,
+        bool_and(corrected_layer_success) as cycle_success,
+
+        count(*) filter (
+            where corrected_layer_success = false
+        ) as unsuccessful_layers,
 
         case
             when sum(requests_sent) > 0

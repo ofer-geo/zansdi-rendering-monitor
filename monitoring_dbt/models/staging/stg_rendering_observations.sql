@@ -5,66 +5,88 @@ with source_data as (
 
 ),
 
+expected_requests as (
+
+    select
+        scale_label,
+        layer_identifier,
+        expected_requests
+    from {{ ref('expected_layer_requests') }}
+
+),
+
 cleaned as (
 
     select
-        id as observation_id,
-        cycle_id,
-        worker_id,
-        observed_at,
-        scenario,
+        s.id as observation_id,
+        s.cycle_id,
+        s.worker_id,
+        s.observed_at,
+        s.scenario,
 
-        scale as scale_label,
+        s.scale as scale_label,
 
         case
-            when scale ~ '^1:[0-9,]+$'
-            then replace(split_part(scale, ':', 2), ',', '')::bigint
+            when s.scale ~ '^1:[0-9,]+$'
+            then replace(split_part(s.scale, ':', 2), ',', '')::bigint
             else null
         end as scale_denominator,
 
-        layer_label,
-        layer_identifier,
-        service,
-        request_type,
+        s.layer_label,
+        s.layer_identifier,
+        s.service,
+        s.request_type,
 
-        coalesce(requests_sent, 0) as requests_sent,
-        coalesce(successful, 0) as successful_requests,
-        coalesce(failed, 0) as failed_requests,
-        coalesce(pending, 0) as pending_requests,
+        coalesce(s.requests_sent, 0) as requests_sent,
+        coalesce(s.successful, 0) as successful_requests,
+        coalesce(s.failed, 0) as failed_requests,
+        coalesce(s.pending, 0) as pending_requests,
 
-        average_response_ms,
-
-        http_status_codes,
-        status,
-        nullif(trim(notes), '') as notes,
-        nullif(trim(screenshot_path), '') as screenshot_path,
+        e.expected_requests,
 
         case
-            when coalesce(requests_sent, 0) > 0
-            then successful::numeric / requests_sent
+            when e.expected_requests is null then false
+            when coalesce(s.successful, 0) >= e.expected_requests then true
+            else false
+        end as corrected_layer_success,
+
+        s.average_response_ms,
+
+        s.http_status_codes,
+        s.status,
+        nullif(trim(s.notes), '') as notes,
+        nullif(trim(s.screenshot_path), '') as screenshot_path,
+
+        case
+            when coalesce(s.requests_sent, 0) > 0
+            then s.successful::numeric / s.requests_sent
             else null
         end as success_rate,
 
         case
-            when coalesce(requests_sent, 0) > 0
-            then failed::numeric / requests_sent
+            when coalesce(s.requests_sent, 0) > 0
+            then s.failed::numeric / s.requests_sent
             else null
         end as failure_rate,
 
         case
-            when coalesce(failed, 0) > 0 then true
-            when lower(status) <> 'working' then true
+            when coalesce(s.failed, 0) > 0 then true
+            when lower(s.status) <> 'working' then true
             else false
         end as has_failure,
 
         case
-            when average_response_ms < 1000 then 'Fast'
-            when average_response_ms < 5000 then 'Moderate'
-            when average_response_ms < 10000 then 'Slow'
+            when s.average_response_ms < 1000 then 'Fast'
+            when s.average_response_ms < 5000 then 'Moderate'
+            when s.average_response_ms < 10000 then 'Slow'
             else 'Very slow'
         end as response_performance_band
 
-    from source_data
+    from source_data s
+
+    left join expected_requests e
+        on s.scale = e.scale_label
+       and s.layer_identifier = e.layer_identifier
 
 )
 
